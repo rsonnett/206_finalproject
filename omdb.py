@@ -1,15 +1,13 @@
 import json
 import sqlite3
-import unittest
 import os
 import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
-import time
 
 
 API_KEY = '8e2144b6'
-# #returns a dictionary with title as key and rating as value
+#returns a dictionary with title as key and rating as value
 
 def get_movie_titles_rtrating():     
     output_dict = {}
@@ -21,17 +19,14 @@ def get_movie_titles_rtrating():
             soup = BeautifulSoup(html, 'html.parser')            
             movies = soup.find_all('span', class_="p--small")     
             percentages = soup.find_all("score-pairs-deprecated", audienceScore="")        
-            movie_count = 0           
+                     
             for (movie, percent) in zip(movies, percentages):                 
                 movie = movie.text
                 movie = movie.strip()
                 percent = percent.attrs['audiencescore']
-                if movie_count < 100: 
-                    if movie not in output_dict: 
-                        output_dict[movie] = percent                                  
-                elif movie_count == 100:                     
-                    break                 
-                movie_count += 1 
+                if movie not in output_dict: 
+                    output_dict[movie] = percent   
+                
         else:             
             print("Error fetching data from Rotten Tomatoes:", rotten_requests.status_code)     
     except Exception as e:         
@@ -67,25 +62,6 @@ def get_imdb_rating(movie):
         return None
 
 
-# def main():
-#     movie_titles_ratings = get_movie_titles_rtrating()
-#     for title, rtrating in movie_titles_ratings.items():
-#         release_date = get_release_date(title)
-#         if release_date is not None:
-#             imdb_rating = get_imdb_rating(title)
-#             if imdb_rating is not None:
-#                 if rtrating.strip() != '': 
-#                     print(f"The release date for '{title}' is {release_date}. The IMDb rating is {imdb_rating} and the Rotten Tomato rating is {rtrating}.")
-#                 else:
-#                     print(f"The release date for '{title}' is {release_date}. The IMDb rating is {imdb_rating} but the Rotten Tomato rating was not found.")
-#             else:
-#                 print(f"IMDb rating not found for '{title}'")
-#         else:
-#             print(f"Release date not found for '{title}'")
-   
-# if __name__ == '__main__':
-#     main()
-
 def get_movie_titles():
     movie_titles = []
     url = "https://www.rottentomatoes.com/browse/movies_in_theaters/sort:popular?page=5"
@@ -109,105 +85,45 @@ def get_movie_titles():
         print("An error occurred:", e)
     return movie_titles
 
-# movie_titles_ratings = get_movie_titles_rtrating()
-
-# imdb_ratings = []
-# rt_ratings = []
-# movie_titles = []
-
-# for title, rtrating in movie_titles_ratings.items():
-#     release_date = get_release_date(title)
-#     if release_date is not None:
-#         imdb_rating = get_imdb_rating(title)
-#         if imdb_rating is not None:
-#             # Append ratings to lists
-#             imdb_ratings.append(float(imdb_rating))
-#             rt_ratings.append(float(rtrating))
-#             movie_titles.append(title)
-
-# # Create an array of indices for each movie
-# indices = np.arange(len(movie_titles))
-
-# # Width of each bar
-# bar_width = 0.35
-
-# # Create the figure and subplot
-# fig, plot1 = plt.subplots(figsize=(15, 8))
-
-# # Plot IMDb ratings
-# plot1.barh(indices - bar_width/2, imdb_ratings, bar_width, label='IMDB Rating')
-
-# # Plot Rotten Tomato ratings
-# plot1.barh(indices + bar_width/2, rt_ratings, bar_width, label='Rotten Tomato Rating')
-
-# # Set the y-axis labels to movie titles
-# plot1.set_yticks(indices)
-# plot1.set_yticklabels(movie_titles)
-# plot1.set_xlabel('Ratings')
-# plot1.set_ylabel('Movies')
-# plot1.set_title('IMDB vs. Rotten Tomato Ratings')
-# plot1.legend()
-
-# plt.tight_layout()
-# plt.show()
-
-
-
 url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/Los%20Angeles/2023-01-01/2024-04-15?unitGroup=us&key=JQ755KVD2PU6VFA6Z6EGQV7QP&include=obs"
 
 response = requests.get(url)
 
 if response.status_code == 200:
     data = response.json()
+
     temperature_data = {}
     for entry in data['days']:
         date = entry['datetime']
         temperature = entry['temp']
         temperature_data[date] = temperature
 
-#Create TemperatureData Table
+    print(temperature_data)
 
-conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
-cursor = conn.cursor()
-
-cursor.execute('''CREATE TABLE IF NOT EXISTS TemperatureData (
-ID INTEGER PRIMARY KEY,
-Date TEXT,
-Temperature REAL
-)''')
-
-for date, temperature in temperature_data.items():
-    cursor.execute('''INSERT INTO TemperatureData (Date, Temperature) VALUES (?, ?)''', (date, temperature))
-
-conn.commit()
-conn.close()
-
-print("Table created and data inserted successfully.")
-
-#Create Movies Table
-
-conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
-cursor = conn.cursor()
+else:
+    print("Failed to retrieve data from the API:", response.status_code)
 
 
-cursor.execute('''CREATE TABLE IF NOT EXISTS Movies (
-ID INTEGER PRIMARY KEY,
-Title TEXT,
-ReleaseDate TEXT
-)''')
+#Table 1- Temperature Data
 
+# conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
+# cursor = conn.cursor()
 
-titles = get_movie_titles()
-for title in titles:
-    release_date = get_release_date(title)
-    cursor.execute('''INSERT INTO Movies (Title, ReleaseDate) VALUES (?, ?)''', (title, release_date))
+# cursor.execute('''CREATE TABLE IF NOT EXISTS TemperatureData (
+# ID INTEGER PRIMARY KEY,
+# Date TEXT,
+# Temperature REAL
+# )''')
 
-conn.commit()
-conn.close()
+# for date, temperature in temperature_data.items():
+#     cursor.execute('''INSERT INTO TemperatureData (Date, Temperature) VALUES (?, ?)''', (date, temperature))
 
-print("Table created and data inserted successfully.")
+# conn.commit()
+# conn.close()
 
-#Create Ratings table
+# print("Table created and data inserted successfully.")
+
+#Table 2- Ratings
 
 def create_database_table():
     conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
@@ -228,14 +144,78 @@ def insert_into_table(imdb_rating, rt_rating):
 
 print("Table created and data inserted successfully.")
 
+#Table 3- Movies
 def main():
-    create_database_table()
-    movie_titles = get_movie_titles()
-    for title in movie_titles:
-        imdb_rating = get_imdb_rating(title)
-        rt_rating = get_movie_titles_rtrating().get(title)
-        insert_into_table(imdb_rating, rt_rating)
+    imdb_ratings = []
+    release_dates = []
+    titles = []
+    rtratings = []
+    count = 0
+    path = os.path.dirname(os.path.abspath(__file__))
 
+    conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''CREATE TABLE IF NOT EXISTS Movies (
+                            ID INTEGER PRIMARY KEY,
+                            Title TEXT,
+                            ReleaseDate TEXT
+                        )''')
+    movie_titles_ratings = get_movie_titles_rtrating()
+    for title, rtrating in movie_titles_ratings.items():
+        release_date = get_release_date(title)
+        cursor.execute('''INSERT INTO Movies (Title, ReleaseDate) VALUES (?, ?)''', (title, release_date))
+        if release_date is not None:
+            imdb_rating = get_imdb_rating(title)          
+            if imdb_rating is not None:              
+                if count < 25:
+                    try:
+                        rtratingI = int(rtrating)
+                        imdb_ratings.append(imdb_rating)
+                        titles.append(title)
+                        rtratings.append(rtratingI / 10)
+                        release_dates.append(release_date)
+                    except ValueError:
+                        print("The string does not represent a valid integer.")              
+                count += 1
+                if rtrating.strip() != '': 
+                    print(f"The release date for '{title}' is {release_date}. The IMDb rating is {imdb_rating} and the Rotten Tomato rating is {rtrating}.")
+                else:
+                    print(f"The release date for '{title}' is {release_date}. The IMDb rating is {imdb_rating} but the Rotten Tomato rating was not found.")
+            else:
+                print(f"IMDb rating not found for '{title}'")
+        else:
+            print(f"Release date not found for '{title}'")
+    conn.commit()
+    conn.close()
+    print("Table created and data inserted successfully.")
+
+    # Visualization 1: Ratings v. Movie Titles
+    fig, plot1 = plt.subplots(figsize=(10, 5))  
+    bar_width = 0.35
+    bar_positions_imdb = range(len(titles))
+    bar_positions_rt = [pos + bar_width for pos in bar_positions_imdb]
+    plot1.bar(bar_positions_imdb, imdb_ratings, bar_width, color='b', label='IMDb Ratings')
+    plot1.bar(bar_positions_rt, rtratings, bar_width, color='r', label='Rotten Tomatoes Ratings')
+    plot1.set_xticks([pos + bar_width / 2 for pos in bar_positions_imdb])  
+    plot1.set_xticklabels(titles, rotation=90)
+    plot1.set_xlabel('Movie Titles')
+    plot1.set_ylabel('Rating')
+    plot1.set_title('IMDb vs. Rotten Tomatoes Ratings')
+    plot1.legend()
+    plt.tight_layout()
+
+    # Visualization 2: Release Date vs. Movie Titles
+    plt.figure(figsize=(10, 6))  
+    plt.scatter(titles[:25], release_dates[:25], color='blue', marker='o')
+    plt.plot(titles[:25], release_dates[:25], color='red', linestyle='-', linewidth=0.5)
+    plt.xticks(rotation=90)
+    plt.xlabel('Movie Titles')
+    plt.ylabel('Release Dates')
+    plt.title('Release Dates vs. Movie Titles')
+    plt.tight_layout()
+
+    plt.show()
 
 if __name__ == '__main__':
     main()
