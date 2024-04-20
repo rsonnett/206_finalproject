@@ -145,6 +145,7 @@ def insert_into_table(imdb_rating, rt_rating):
 print("Table created and data inserted successfully.")
 
 #Table 3- Movies
+
 def main():
     imdb_ratings = []
     release_dates = []
@@ -191,6 +192,7 @@ def main():
     print("Table created and data inserted successfully.")
 
     # Visualization 1: Ratings v. Movie Titles
+
     fig, plot1 = plt.subplots(figsize=(10, 5))  
     bar_width = 0.35
     bar_positions_imdb = range(len(titles))
@@ -206,6 +208,7 @@ def main():
     plt.tight_layout()
 
     # Visualization 2: Release Date vs. Movie Titles
+
     plt.figure(figsize=(10, 6))  
     plt.scatter(titles[:25], release_dates[:25], color='blue', marker='o')
     plt.plot(titles[:25], release_dates[:25], color='red', linestyle='-', linewidth=0.5)
@@ -214,8 +217,36 @@ def main():
     plt.ylabel('Release Dates')
     plt.title('Release Dates vs. Movie Titles')
     plt.tight_layout()
-
     plt.show()
 
-if __name__ == '__main__':
-    main()
+   # Visualization 3: Temperature v. Average Rating
+
+    conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT Date, Temperature FROM TemperatureData")
+    temperature_data = cursor.fetchall()
+    cursor.execute("SELECT IMDbRating, RTRating FROM Ratings")
+    ratings_data = cursor.fetchall()
+    conn.close()
+    temperature_dict = {date: temperature for date, temperature in temperature_data}
+    average_ratings = {} 
+    count_ratings = {}  
+    for imdb_rating, rt_rating in ratings_data:
+        temperature = temperature_dict.get(date)  
+        if temperature:
+            if temperature not in average_ratings:
+                average_ratings[temperature] = 0
+                count_ratings[temperature] = 0
+            average_ratings[temperature] += (imdb_rating + rt_rating) / 2
+            count_ratings[temperature] += 1
+    for temperature in average_ratings:
+        average_ratings[temperature] /= count_ratings[temperature]
+    plt.figure(figsize=(10, 6))
+    plt.scatter(list(average_ratings.keys()), list(average_ratings.values()), color='blue', marker='o')
+    plt.title('Average Ratings vs. Temperature')
+    plt.xlabel('Temperature (Fahrenheit)')
+    plt.ylabel('Average Rating')
+    plt.show()
+
+    if __name__ == '__main__':
+        main()
