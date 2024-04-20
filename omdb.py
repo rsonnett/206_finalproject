@@ -105,8 +105,9 @@ else:
 
 
 #Table 1- Temperature Data
+# path = os.path.dirname(os.path.abspath(__file__))
 
-# conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
+# conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
 # cursor = conn.cursor()
 
 # cursor.execute('''CREATE TABLE IF NOT EXISTS TemperatureData (
@@ -126,7 +127,9 @@ else:
 #Table 2- Ratings
 
 def create_database_table():
-    conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
+    path = os.path.dirname(os.path.abspath(__file__))
+
+    conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS Ratings
                  (ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -136,7 +139,9 @@ def create_database_table():
     conn.close()
 
 def insert_into_table(imdb_rating, rt_rating):
-    conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
+    path = os.path.dirname(os.path.abspath(__file__))
+
+    conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
     c = conn.cursor()
     c.execute("INSERT INTO Ratings (IMDbRating, RTRating) VALUES (?, ?)", (imdb_rating, rt_rating))
     conn.commit()
@@ -145,7 +150,6 @@ def insert_into_table(imdb_rating, rt_rating):
 print("Table created and data inserted successfully.")
 
 #Table 3- Movies
-
 def main():
     imdb_ratings = []
     release_dates = []
@@ -157,6 +161,7 @@ def main():
     conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
     cursor = conn.cursor()
     
+    cursor.execute('''DROP TABLE Movies''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS Movies (
                             ID INTEGER PRIMARY KEY,
                             Title TEXT,
@@ -191,24 +196,41 @@ def main():
     conn.close()
     print("Table created and data inserted successfully.")
 
-    # Visualization 1: Ratings v. Movie Titles
+   # Sort the data based on IMDb ratings
+    sorted_data = sorted(zip(imdb_ratings, rtratings, titles))
 
-    fig, plot1 = plt.subplots(figsize=(10, 5))  
+    # Extract sorted ratings and titles
+    sorted_imdb_ratings, sorted_rtratings, sorted_titles = zip(*sorted_data)
+
+    # Create a figure and subplots
+    fig, plot1 = plt.subplots(figsize=(10, 5))
+
+    # Set the positions for the bars
     bar_width = 0.35
     bar_positions_imdb = range(len(titles))
     bar_positions_rt = [pos + bar_width for pos in bar_positions_imdb]
-    plot1.bar(bar_positions_imdb, imdb_ratings, bar_width, color='b', label='IMDb Ratings')
-    plot1.bar(bar_positions_rt, rtratings, bar_width, color='r', label='Rotten Tomatoes Ratings')
-    plot1.set_xticks([pos + bar_width / 2 for pos in bar_positions_imdb])  
-    plot1.set_xticklabels(titles, rotation=90)
+
+    # Plot IMDb ratings
+    plot1.bar(bar_positions_imdb, sorted_imdb_ratings, bar_width, color='b', label='IMDb Ratings')
+
+    # Plot Rotten Tomatoes ratings
+    plot1.bar(bar_positions_rt, sorted_rtratings, bar_width, color='r', label='Rotten Tomatoes Ratings')
+
+    # Set x-axis labels as movie titles
+    plot1.set_xticks([pos + bar_width / 2 for pos in bar_positions_imdb])
+    plot1.set_xticklabels(sorted_titles, rotation=90)
+
+    # Set labels and title
     plot1.set_xlabel('Movie Titles')
     plot1.set_ylabel('Rating')
     plot1.set_title('IMDb vs. Rotten Tomatoes Ratings')
     plot1.legend()
+
+    # Show the plot
     plt.tight_layout()
 
-    # Visualization 2: Release Date vs. Movie Titles
 
+    # Visualization 2: Release Date vs. Movie Titles
     plt.figure(figsize=(10, 6))  
     plt.scatter(titles[:25], release_dates[:25], color='blue', marker='o')
     plt.plot(titles[:25], release_dates[:25], color='red', linestyle='-', linewidth=0.5)
@@ -217,36 +239,8 @@ def main():
     plt.ylabel('Release Dates')
     plt.title('Release Dates vs. Movie Titles')
     plt.tight_layout()
+
     plt.show()
 
-   # Visualization 3: Temperature v. Average Rating
-
-    conn = sqlite3.connect('/Users/lilysteinmetz/Desktop/SI_final_project.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT Date, Temperature FROM TemperatureData")
-    temperature_data = cursor.fetchall()
-    cursor.execute("SELECT IMDbRating, RTRating FROM Ratings")
-    ratings_data = cursor.fetchall()
-    conn.close()
-    temperature_dict = {date: temperature for date, temperature in temperature_data}
-    average_ratings = {} 
-    count_ratings = {}  
-    for imdb_rating, rt_rating in ratings_data:
-        temperature = temperature_dict.get(date)  
-        if temperature:
-            if temperature not in average_ratings:
-                average_ratings[temperature] = 0
-                count_ratings[temperature] = 0
-            average_ratings[temperature] += (imdb_rating + rt_rating) / 2
-            count_ratings[temperature] += 1
-    for temperature in average_ratings:
-        average_ratings[temperature] /= count_ratings[temperature]
-    plt.figure(figsize=(10, 6))
-    plt.scatter(list(average_ratings.keys()), list(average_ratings.values()), color='blue', marker='o')
-    plt.title('Average Ratings vs. Temperature')
-    plt.xlabel('Temperature (Fahrenheit)')
-    plt.ylabel('Average Rating')
-    plt.show()
-
-    if __name__ == '__main__':
-        main()
+if __name__ == '__main__':
+    main()
