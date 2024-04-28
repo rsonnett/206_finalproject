@@ -1,4 +1,5 @@
 import requests
+import sqlite3
 
 def get_holidays(api_key, year):
     country_code = "US"
@@ -16,24 +17,6 @@ def print_holidays(holidays):
     for holiday in holidays:
         print(f"{holiday[0]}: {holiday[1]}")
 
-if __name__ == "__main__":
-    api_key = "hW94DfGsUQ2UHH0ZBmg92B6zwI8c8upl"
-    years = [2023, 2024]
-    all_holidays = []
-    for year in years:
-        holidays = get_holidays(api_key, year)
-        if holidays:
-            print(f"Holidays in {year}:")
-            print_holidays(holidays)
-            all_holidays.extend(holidays)
-    if not all_holidays:
-        print("No holidays found for the specified years.")
-
-
-import sqlite3
-
-import sqlite3
-
 def create_holidays_table(conn):
     cursor = conn.cursor()
     try:
@@ -50,13 +33,17 @@ def create_holidays_table(conn):
 
 def insert_into_holidays_table(conn, holidays):
     cursor = conn.cursor()
+    inserted_holidays = set()  # To keep track of inserted holidays
     for holiday, date_iso in holidays:
-        month = date_iso.split("-")[1]
-        try:
-            cursor.execute("INSERT INTO Holidays (Holiday, Date, Month) VALUES (?, ?, ?)", (holiday, date_iso, month))
-            conn.commit()
-        except sqlite3.Error as e:
-            print("Error inserting holiday data:", e)
+        # Check if the holiday is already inserted
+        if (holiday, date_iso) not in inserted_holidays:
+            month = date_iso.split("-")[1]
+            try:
+                cursor.execute("INSERT INTO Holidays (Holiday, Date, Month) VALUES (?, ?, ?)", (holiday, date_iso, month))
+                conn.commit()
+                inserted_holidays.add((holiday, date_iso))  # Add inserted holiday to the set
+            except sqlite3.Error as e:
+                print("Error inserting holiday data:", e)
 
 if __name__ == "__main__":
     api_key = "hW94DfGsUQ2UHH0ZBmg92B6zwI8c8upl"
