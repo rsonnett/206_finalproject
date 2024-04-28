@@ -36,7 +36,7 @@ def main():
     plot1.set_title('IMDb vs. Rotten Tomatoes Ratings')
     plot1.legend()
     plt.tight_layout()
-    plt.show()
+    
 
     # Visualization 2: Release Date vs. Movie Titles
     conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
