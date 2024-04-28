@@ -1,5 +1,6 @@
 import requests
 import sqlite3
+import os
 
 def get_holidays(api_key, year):
     country_code = "US"
@@ -22,7 +23,7 @@ def get_holidays(api_key, year):
 def create_holiday_month_table(conn):
     cursor = conn.cursor()
     try:
-        cursor.execute('''DROP TABLE IF EXISTS holiday_month''')  # Drop the existing table
+        # cursor.execute('''DROP TABLE IF EXISTS holiday_month''')  # Drop the existing table
         cursor.execute('''CREATE TABLE IF NOT EXISTS holiday_month (
                             holiday TEXT,
                             month TEXT
@@ -32,10 +33,34 @@ def create_holiday_month_table(conn):
     except sqlite3.Error as e:
         print("Error creating holiday_month table:", e)
 
+def count_rows(conn, table_name):
+    # path = os.path.dirname(os.path.abspath(__file__))
+
+    # conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
+    cursor = conn.cursor()
+    
+    try:
+        # Execute the SQL query to count rows in the table
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
+        # Fetch the result
+        result = cursor.fetchone()[0]
+        print(f"Number of rows in '{table_name}': {result}")
+        return result
+    except sqlite3.Error as e:
+        print("An error occurred:", e)
+    
+    # Close the connection
+    conn.close()
+
 def insert_into_holiday_month_table(conn, holidays):
     cursor = conn.cursor()
     inserted_holidays = set()  # To keep track of inserted holidays
-    for holiday, date_iso in holidays:
+    i = count_rows(conn, 'holiday_month')
+    j = count_rows(conn, 'holiday_month')
+    while i < (j + 25):
+
+        holiday = holidays[i][0]
+        date_iso = holidays[i][1]
         # Check if the holiday is already inserted
         if (holiday, date_iso) not in inserted_holidays:
             month = date_iso.split("-")[1]
@@ -45,6 +70,16 @@ def insert_into_holiday_month_table(conn, holidays):
                 inserted_holidays.add((holiday, date_iso))  # Add inserted holiday to the set
             except sqlite3.Error as e:
                 print("Error inserting holiday data:", e)
+
+        i += 1
+
+        if i == 24:
+            j += 1
+
+    conn.commit()
+    
+    print("Table created and data inserted successfully.")
+
 
 if __name__ == "__main__":
     api_key = "hW94DfGsUQ2UHH0ZBmg92B6zwI8c8upl"
@@ -56,12 +91,15 @@ if __name__ == "__main__":
             all_holidays.extend(holidays)
 
     if all_holidays:
-        conn = sqlite3.connect('SI_final_project.db')
+        path = os.path.dirname(os.path.abspath(__file__))
+
+        conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
+        cursor = conn.cursor()
         create_holiday_month_table(conn)
         insert_into_holiday_month_table(conn, all_holidays)
         print("Data inserted successfully into the holiday_month table.")
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM Holidays")  # Check for data in the Holidays table
+        cursor.execute("SELECT COUNT(*) FROM holiday_month")  # Check for data in the Holidays table
         result = cursor.fetchone()
         if result[0] > 0:
             print("Data found in the Holidays table.")
@@ -71,31 +109,3 @@ if __name__ == "__main__":
     else:
         print("No holidays found for the specified years.")
 
-import sqlite3
-import matplotlib.pyplot as plt
-import numpy as np
-
-def get_month_counts_from_db(conn):
-    cursor = conn.cursor()
-    cursor.execute("SELECT month, COUNT(*) FROM holiday_month GROUP BY month")
-    month_counts = cursor.fetchall()
-    return month_counts
-
-def plot_normal_distribution(month_counts):
-    months, counts = zip(*month_counts)
-    x = np.arange(len(months))
-    plt.bar(x, counts, align='center', alpha=0.5)
-    plt.xticks(x, months)
-    plt.xlabel('Month')
-    plt.ylabel('Frequency')
-    plt.title('Holiday Distribution by Month')
-    plt.show()
-
-if __name__ == "__main__":
-    conn = sqlite3.connect('SI_final_project.db')
-    month_counts = get_month_counts_from_db(conn)
-    if month_counts:
-        plot_normal_distribution(month_counts)
-    else:
-        print("No data found in the holiday_month table.")
-    conn.close()
