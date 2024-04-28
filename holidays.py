@@ -80,8 +80,7 @@ def insert_into_holiday_month_table(conn, holidays):
     
     print("Table created and data inserted successfully.")
 
-
-if __name__ == "__main__":
+def main():
     api_key = "hW94DfGsUQ2UHH0ZBmg92B6zwI8c8upl"
     years = [2023, 2024]
     all_holidays = []
@@ -109,3 +108,6 @@ if __name__ == "__main__":
     else:
         print("No holidays found for the specified years.")
 
+
+if __name__ == "__main__":
+    main()

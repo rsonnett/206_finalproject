@@ -19,7 +19,7 @@ def plot_normal_distribution(month_counts):
     plt.title('Holiday Distribution by Month')
     plt.show()
 
-if __name__ == "__main__":
+def main():
     path = os.path.dirname(os.path.abspath(__file__))
 
     conn = sqlite3.connect(path + "/" + 'SI_final_project.db')
@@ -30,3 +30,6 @@ if __name__ == "__main__":
     else:
         print("No data found in the holiday_month table.")
     conn.close()
+
+if __name__ == "__main__":
+    main()
