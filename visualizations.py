@@ -22,13 +22,17 @@ def main():
         imdb_rating = str(imdb_rating)
         imdb_ratings.append(imdb_rating)
     rtratings_from_db = [row[1] for row in rows]
+    rtratingL= []
+    for rtrating in rtratings_from_db:
+        rtrating = int(rtrating) / 10
+        rtratingL.append(rtrating)
     titles_from_db = [row[2] for row in rows]
     fig, plot1 = plt.subplots(figsize=(10, 5))
     bar_width = 0.35
     bar_positions_imdb = range(len(titles_from_db))
     bar_positions_rt = [pos + bar_width for pos in bar_positions_imdb]
     plot1.bar(bar_positions_imdb, imdb_ratings, bar_width, color='b', label='IMDb Ratings')
-    plot1.bar(bar_positions_rt, rtratings_from_db, bar_width, color='r', label='Rotten Tomatoes Ratings')
+    plot1.bar(bar_positions_rt, rtratingL, bar_width, color='r', label='Rotten Tomatoes Ratings')
     plot1.set_xticks([pos + bar_width / 2 for pos in bar_positions_imdb])
     plot1.set_xticklabels(titles_from_db, rotation=90)
     plot1.set_xlabel('Movie Titles')
